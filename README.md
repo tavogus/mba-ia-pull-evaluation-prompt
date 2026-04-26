@@ -334,3 +334,90 @@ python src/evaluate.py
 - **Não altere os datasets de avaliação** - apenas os prompts em `prompts/bug_to_user_story_v2.yml`
 - **Itere, itere, itere** - é normal precisar de 3-5 iterações para atingir 0.9 em todas as métricas
 - **Documente seu processo** - a jornada de otimização é tão importante quanto o resultado final
+
+---
+
+## Técnicas Aplicadas (Fase 2)
+
+Durante a refatoração de `prompts/bug_to_user_story_v2.yml`, foram aplicadas as seguintes técnicas de Prompt Engineering:
+
+1. **Few-shot Learning (obrigatória)**  
+   - **Justificativa:** melhora a consistência do formato de saída e reduz ambiguidades na transformação de bugs em user stories.
+   - **Aplicação prática:** inclusão de exemplos completos de entrada (bug report) e saída esperada (user story em Markdown com critérios de aceitação).
+
+2. **Role Prompting**  
+   - **Justificativa:** definir a persona do modelo aumenta a precisão semântica e o foco no contexto de produto.
+   - **Aplicação prática:** instruções no system prompt posicionando o modelo como Product Manager experiente em decomposição de requisitos.
+
+3. **Chain of Thought (estruturado)**  
+   - **Justificativa:** melhora a qualidade do raciocínio em bugs médios/complexos, especialmente para identificar causa, impacto e regra de negócio.
+   - **Aplicação prática:** orientação para seguir etapas de análise (contexto -> problema -> impacto -> user story -> critérios) antes de gerar a resposta final.
+
+4. **Tratamento de edge cases**  
+   - **Justificativa:** evita respostas incompletas quando o bug report vem com dados faltantes ou inconsistentes.
+   - **Aplicação prática:** regras explícitas para assumir hipóteses mínimas, registrar limitações e ainda produzir uma user story utilizável.
+
+## Resultados Finais
+
+- **Avaliações com nota mínima >= 0.9:** evidenciadas pelos screenshots da pasta `evidences/`.
+
+### Tabela comparativa: prompt ruim (v1) vs prompt otimizado (v2)
+
+| Critério | v1 (ruim) | v2 (otimizado) |
+| --- | --- | --- |
+| Clareza de instruções | Genérica e ambígua | Objetiva e com regras explícitas |
+| Estrutura de saída | Inconsistente | Padronizada em Markdown |
+| Exemplos (Few-shot) | Ausente | Presente com exemplos completos |
+| Tratamento de edge cases | Fraco | Regras explícitas para dados incompletos |
+| Performance nas métricas | Abaixo de 0.9 | >= 0.9 nas métricas avaliadas |
+
+## Como Executar
+
+### Pré-requisitos
+
+- Python `3.9+`
+- Ambiente virtual ativo
+- Dependências instaladas com `pip install -r requirements.txt`
+- Variáveis de ambiente configuradas no `.env`:
+  - `LANGCHAIN_TRACING_V2=true`
+  - `LANGCHAIN_API_KEY=<sua_chave_langsmith>`
+  - `LANGCHAIN_PROJECT=<nome_do_projeto>`
+  - `OPENAI_API_KEY=<sua_chave_openai>` (ou chave Gemini, conforme seu provedor)
+
+### Comandos por fase
+
+1. **Fase 1 - Pull do prompt v1**
+   ```bash
+   python src/pull_prompts.py
+   ```
+
+2. **Fase 2 - Otimização**
+   - Editar `prompts/bug_to_user_story_v2.yml` aplicando as técnicas escolhidas.
+
+3. **Fase 3 - Push do prompt v2**
+   ```bash
+   python src/push_prompts.py
+   ```
+
+4. **Fase 4 - Avaliação automática**
+   ```bash
+   python src/evaluate.py
+   ```
+
+5. **Fase 5 - Testes**
+   ```bash
+   pytest tests/test_prompts.py
+   ```
+
+## Evidências no LangSmith
+
+- Link público (ou screenshots) do dashboard do LangSmith com:
+  - Dataset de avaliação com 15 exemplos
+  - Execuções do prompt `bug_to_user_story_v2` com notas >= 0.9
+  - Tracing detalhado de pelo menos 3 exemplos
+
+### Screenshots utilizados (`evidences/`)
+
+![Avaliação LangSmith 1](evidences/Captura%20de%20Tela%202026-04-26%20%C3%A0s%2013.52.16.png)
+![Avaliação LangSmith 2](evidences/Captura%20de%20Tela%202026-04-26%20%C3%A0s%2013.53.16.png)
+![Avaliação LangSmith 3](evidences/Captura%20de%20Tela%202026-04-26%20%C3%A0s%2013.53.37.png)
